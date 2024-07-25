@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
 import { toast } from 'react-toastify';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '/src/lib/firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 import upload from '/src/lib/upload.js';
@@ -11,6 +11,8 @@ const Login = () => {
 		file: null,
 		url: '',
 	});
+
+	const [loading, setLoading] = useState(false);
 
 	const handleAvatar = (event) => {
 		const file = event.target.files[0];
@@ -22,13 +24,29 @@ const Login = () => {
 		}
 	};
 
-	const handleLogin = (event) => {
+	const handleLogin = async (event) => {
 		event.preventDefault();
-		toast.error('Hello');
+		setLoading(true);
+
+		const formData = new FormData(event.target);
+
+		const { email, password } = Object.fromEntries(formData);
+
+		try {
+			await signInWithEmailAndPassword(auth, email, password);
+			toast.success('Logged in successfully');
+		} catch (error) {
+			console.log(error);
+			toast.error(error.message);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleRegister = async (event) => {
 		event.preventDefault();
+
+		setLoading(true);
 
 		const formData = new FormData(event.target);
 
@@ -58,6 +76,8 @@ const Login = () => {
 		} catch (error) {
 			console.log(error);
 			toast.error(error.message);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -78,7 +98,11 @@ const Login = () => {
 						name="password"
 						id="password"
 					/>
-					<button type="submit">Sign In</button>
+					<button
+						type="submit"
+						disabled={loading}>
+						{loading ? 'Loading...' : 'Login'}
+					</button>
 				</form>
 			</div>
 			<div className="separator"></div>
@@ -117,7 +141,11 @@ const Login = () => {
 						name="newPassword"
 						id="newPassword"
 					/>
-					<button type="submit">Sign Up</button>
+					<button
+						type="submit"
+						disabled={loading}>
+						{loading ? 'Loading...' : 'Sign Up'}
+					</button>
 				</form>
 			</div>
 		</div>
