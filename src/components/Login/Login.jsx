@@ -3,7 +3,7 @@ import './Login.css';
 import { toast } from 'react-toastify';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '/src/lib/firebase.js';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocs, where, query, collection } from 'firebase/firestore';
 import upload from '/src/lib/upload.js';
 
 const Login = () => {
@@ -52,12 +52,28 @@ const Login = () => {
 
 		const { username, newEmail, newPassword } = Object.fromEntries(formData);
 
-		console.log(newEmail, newPassword);
-
 		try {
 			const res = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
 
 			const imgUrl = await upload(avatar.file);
+
+			const usersRef = collection(db, 'users');
+
+			const usernameQuery = query(usersRef, where('username', '==', username));
+			const usernameQuerySnapshot = await getDocs(usernameQuery);
+
+			const emailQuery = query(usersRef, where('email', '==', newEmail));
+			const emailQuerySnapshot = await getDocs(emailQuery);
+
+			if (!usernameQuerySnapshot.empty) {
+				toast.error('Username already exists');
+				return;
+			}
+
+			if (!emailQuerySnapshot.empty) {
+				toast.error('Email already exists');
+				return;
+			}
 
 			await setDoc(doc(db, 'users', res.user.uid), {
 				username: username,
