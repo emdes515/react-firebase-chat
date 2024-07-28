@@ -62,16 +62,8 @@ const Login = () => {
 			const usernameQuery = query(usersRef, where('username', '==', username));
 			const usernameQuerySnapshot = await getDocs(usernameQuery);
 
-			const emailQuery = query(usersRef, where('email', '==', newEmail));
-			const emailQuerySnapshot = await getDocs(emailQuery);
-
 			if (!usernameQuerySnapshot.empty) {
 				toast.error('Username already exists');
-				return;
-			}
-
-			if (!emailQuerySnapshot.empty) {
-				toast.error('Email already exists');
 				return;
 			}
 
