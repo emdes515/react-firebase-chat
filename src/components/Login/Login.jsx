@@ -89,9 +89,6 @@ const Login = () => {
 			});
 
 			toast.success('Account created');
-
-			await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
-			window.location.reload(); // Refresh the page
 		} catch (error) {
 			console.log(error);
 			toast.error(error.message);
