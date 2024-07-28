@@ -1,12 +1,25 @@
 import React from 'react';
 import './AddUser.css';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import {
+	collection,
+	query,
+	where,
+	getDocs,
+	setDoc,
+	serverTimestamp,
+	updateDoc,
+	arrayUnion,
+	doc,
+} from 'firebase/firestore';
 import { db } from '/src/lib/firebase.js';
 import { toast } from 'react-toastify';
 import { useState } from 'react';
+import { useUserStore } from '/src/lib/userStore.js';
 
 const AddUser = () => {
 	const [user, setUser] = useState(null);
+
+	const { currentUser } = useUserStore();
 
 	const handleSearch = async (e) => {
 		e.preventDefault();
@@ -23,12 +36,56 @@ const AddUser = () => {
 
 			if (!querySnapshot.empty) {
 				setUser(querySnapshot.docs[0].data());
+			} else {
+				toast.error('User not found');
 			}
-
-			console.log(user);
 		} catch (error) {
 			console.log(error);
-			toast.error('User not found');
+			toast.error(`Error: ${error.message}`);
+		}
+	};
+
+	const handleAdd = async (e) => {
+		e.preventDefault();
+
+		const chatRef = collection(db, 'chats');
+		const userChatsRef = collection(db, 'userchats');
+
+		try {
+			const newChatRef = doc(chatRef);
+
+			await setDoc(newChatRef, {
+				createdAt: serverTimestamp(),
+				messages: [],
+			});
+
+			await setDoc(
+				doc(userChatsRef, user.id),
+				{
+					chats: arrayUnion({
+						chatID: newChatRef.id,
+						lastMessage: '',
+						receiverID: currentUser.id,
+						updatedAt: Date.now(),
+					}),
+				},
+				{ merge: true }
+			);
+
+			await setDoc(
+				doc(userChatsRef, currentUser.id),
+				{
+					chats: arrayUnion({
+						chatID: newChatRef.id,
+						lastMessage: '',
+						receiverID: user.id,
+						updatedAt: Date.now(),
+					}),
+				},
+				{ merge: true }
+			);
+		} catch (error) {
+			console.log(error);
 		}
 	};
 
@@ -52,7 +109,7 @@ const AddUser = () => {
 						/>
 						<span>{user.username}</span>
 					</div>
-					<button>Add User</button>
+					<button onClick={handleAdd}>Add User</button>
 				</div>
 			)}
 		</div>

@@ -3,7 +3,15 @@ import './Login.css';
 import { toast } from 'react-toastify';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '/src/lib/firebase.js';
-import { doc, setDoc, getDocs, where, query, collection } from 'firebase/firestore';
+import {
+	doc,
+	setDoc,
+	getDocs,
+	where,
+	query,
+	collection,
+	serverTimestamp,
+} from 'firebase/firestore';
 import upload from '/src/lib/upload.js';
 
 const Login = () => {
@@ -80,7 +88,7 @@ const Login = () => {
 				email: newEmail,
 				avatar: imgUrl,
 				id: res.user.uid,
-				createdAt: new Date(),
+				createdAt: serverTimestamp(),
 				blocked: [],
 			});
 
