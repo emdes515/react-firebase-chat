@@ -53,19 +53,27 @@ const Login = () => {
 		const { username, newEmail, newPassword } = Object.fromEntries(formData);
 
 		try {
-			const res = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
-
-			const imgUrl = await upload(avatar.file);
-
 			const usersRef = collection(db, 'users');
 
 			const usernameQuery = query(usersRef, where('username', '==', username));
 			const usernameQuerySnapshot = await getDocs(usernameQuery);
 
+			const emailQuery = query(usersRef, where('email', '==', newEmail));
+			const emailQuerySnapshot = await getDocs(emailQuery);
+
 			if (!usernameQuerySnapshot.empty) {
 				toast.error('Username already exists');
 				return;
 			}
+
+			if (!emailQuerySnapshot.empty) {
+				toast.error('Email already exists');
+				return;
+			}
+
+			const res = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+
+			const imgUrl = await upload(avatar.file);
 
 			await setDoc(doc(db, 'users', res.user.uid), {
 				username: username,
@@ -81,6 +89,9 @@ const Login = () => {
 			});
 
 			toast.success('Account created');
+
+			await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
+			window.location.reload(); // Refresh the page
 		} catch (error) {
 			console.log(error);
 			toast.error(error.message);
